@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, MessageHandler,
-    filters, ContextTypes, ConversationHandler
+    filters, ContextTypes
 )
 from questions import جميع_الأسئلة, دروس
 
@@ -14,8 +14,6 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 TOKEN = "8744608803:AAFpiB8kGwd91CnrPcnX7okkjDcKFmffZkg"
-
-MAT_GRADE, MAT_TOPIC, MAT_CONTENT, MAT_SUMMARY, MAT_QUESTIONS, MAT_DATE = range(6)
 
 def get_db():
     conn = sqlite3.connect('earth_science_bot.db')
@@ -227,8 +225,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data.startswith("mat_grade_"):
         grade = data.split("_")[2]
         context.user_data["mat_grade"] = grade
+        context.user_data["mat_step"] = "topic"
         await query.edit_message_text(f"الصف: {get_grade_name(grade)}\nأرسل اسم الموضوع (مثال: المعادن):")
-        return MAT_TOPIC
+        return
 
 async def send_question(query, context):
     quiz = context.user_data.get("quiz")
@@ -476,17 +475,6 @@ async def add_material(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("الحادي عشر", callback_data="mat_grade_11")],
     ]
     await update.message.reply_text("اختر الصف:", reply_markup=InlineKeyboardMarkup(keyboard))
-
-async def mat_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    data = query.data
-    if data.startswith("mat_grade_"):
-        grade = data.split("_")[2]
-        context.user_data["mat_grade"] = grade
-        context.user_data["mat_step"] = "topic"
-        await query.edit_message_text(f"اخترت {get_grade_name(grade)}\nأرسل اسم الموضوع:")
-        return
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.error(f"Error: {context.error}")
